@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserRating;
+use App\Models\UserRatingHistory;
+use App\Services\LegendService;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Nette\Utils\Image;
 
 class HomeController extends Controller
 {
@@ -14,7 +18,7 @@ class HomeController extends Controller
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(public LegendService $legendService)
     {
         $this->middleware('auth');
     }
@@ -41,8 +45,97 @@ class HomeController extends Controller
             }
         }
 
-        $users = User::all();
+        $legends = User::orderBy('rating', 'DESC')->get();
 
-        return view('home',['users' => $users]);
+        $images = [];
+        foreach ($legends as $legend) {
+            try {
+                $directory = storage_path('app/public/legends/' .  $legend->id);
+                $files = scandir($directory);
+                $link = asset('storage/legends/' .  $legend->id . '/' . $files[2]);
+                $images[$legend->id] = $link;
+            } catch (\Exception) {
+                continue;
+            }
+        }
+
+        $myValues = [];
+
+        foreach (UserRating::all() as $rating) {
+            if (intval($rating->evaluating_user_id) === Auth::id()) {
+                $nextUpdateDate = (new Carbon($rating->updated_at))->addMonth();
+
+                $myValues[intval($rating->assessed_user_id)] = [
+                    'value' => intval($rating->value),
+                    'updated' => $rating->updated_at,
+                    'next_update' => $nextUpdateDate->format('D, d M Y H:i:s'),
+                    'is_disable' => Carbon::now() < $nextUpdateDate,
+                ];
+            }
+        }
+
+
+        return view('home', [
+            'legends' => $legends,
+            'user' => Auth::user(),
+            'images' => $images,
+            'myValues' =>  $myValues,
+        ]);
+    }
+
+    public function updateProfile()
+    {
+        $name = \request('name');
+
+        if (!is_null($name) && $name !== '') {
+            Auth::user()->update([
+                'name' => $name
+            ]);
+        }
+
+        $image = \request('file');
+
+        $path = "public/legends/" . Auth::id();
+        Storage::deleteDirectory($path);
+
+        $image->store($path);
+
+        return redirect()->back();
+    }
+
+    public function setValue()
+    {
+        $value = intval(\request('value'));
+        $legendId = intval(\request('legend_id'));
+
+        if ($value < 0) {
+            $value = 40;
+        }
+
+        if ($value > 100) {
+            $value = 100;
+        }
+
+        UserRating::updateOrCreate(
+            [
+                'evaluating_user_id' => Auth::id(),
+                'assessed_user_id' => $legendId
+            ],
+            [
+                'value' => $value,
+            ],
+        );
+
+        UserRatingHistory::create(
+            [
+                'evaluating_user_id' => Auth::id(),
+                'assessed_user_id' => $legendId,
+                'value' => $value,
+            ],
+        );
+
+        $this->legendService->reCalculateRating($legendId);
+
+        return redirect()->back();
     }
 }
