@@ -1,0 +1,23 @@
+@import url('https://fonts.bunny.net/css?family=Nunito');
+
+.legend-table {
+    border-collapse: separate!important;
+}
+
+.legend-td, .legend-th {
+    padding: 10px;
+    border: 1px #575757 solid;
+}
+
+.legend-tr:nth-child(1) {
+    padding: 10px;
+    background: silver;
+}
+
+.legend-img {
+    width: 100px;
+}
+
+.legend-my-value-th {
+    min-width: 150px;
+}

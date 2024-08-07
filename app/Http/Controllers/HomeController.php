@@ -48,6 +48,7 @@ class HomeController extends Controller
         $legends = User::orderBy('rating', 'DESC')->get();
 
         $images = [];
+
         foreach ($legends as $legend) {
             try {
                 $directory = storage_path('app/public/legends/' .  $legend->id);
@@ -60,8 +61,15 @@ class HomeController extends Controller
         }
 
         $myValues = [];
+        $valueCounts = [];
 
         foreach (UserRating::all() as $rating) {
+            if (!isset($valueCounts[$rating->assessed_user_id])) {
+                $valueCounts[$rating->assessed_user_id] = 1;
+            } else {
+                $valueCounts[$rating->assessed_user_id] = $valueCounts[$rating->assessed_user_id] + 1;
+            }
+
             if (intval($rating->evaluating_user_id) === Auth::id()) {
                 $nextUpdateDate = (new Carbon($rating->updated_at))->addMonth();
 
@@ -69,17 +77,17 @@ class HomeController extends Controller
                     'value' => intval($rating->value),
                     'updated' => $rating->updated_at,
                     'next_update' => $nextUpdateDate->format('D, d M Y H:i:s'),
-                    'is_disable' => Carbon::now() < $nextUpdateDate,
+                    'is_disabled' => intval(Carbon::now() < $nextUpdateDate),
                 ];
             }
         }
-
 
         return view('home', [
             'legends' => $legends,
             'user' => Auth::user(),
             'images' => $images,
-            'myValues' =>  $myValues,
+            'myValues' => $myValues,
+            'valueCounts' => $valueCounts
         ]);
     }
 
@@ -95,10 +103,16 @@ class HomeController extends Controller
 
         $image = \request('file');
 
-        $path = "public/legends/" . Auth::id();
-        Storage::deleteDirectory($path);
+        try {
+            if (!is_null($image)) {
+                $path = "public/legends/" . Auth::id();
+                Storage::deleteDirectory($path);
 
-        $image->store($path);
+                $image->store($path);
+            }
+        } catch (\Exception) {
+            return redirect()->back();
+        }
 
         return redirect()->back();
     }
