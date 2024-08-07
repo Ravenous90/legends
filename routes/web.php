@@ -27,3 +27,10 @@ Route::post('/set-value', [App\Http\Controllers\HomeController::class, 'setValue
 
 Route::get('/google/redirect', [App\Http\Controllers\GoogleLoginController::class, 'redirectToGoogle'])->name('google.redirect');
 Route::get('/google/callback', [App\Http\Controllers\GoogleLoginController::class, 'handleGoogleCallback'])->name('google.callback');
+
+Route::get('/clear-cache', function () {
+
+    \Illuminate\Support\Facades\Artisan::call('optimize');
+
+    dd("Cache is cleared");
+});
