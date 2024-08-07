@@ -21,18 +21,6 @@ return new class extends Migration
             $table->unsignedBigInteger('assessed_user_id');
             $table->integer('value');
             $table->timestamps();
-
-            $table->foreign('evaluating_user_id')
-                ->references('id')
-                ->on('users')
-                ->onDelete('cascade')
-                ->onUpdate('cascade');
-
-            $table->foreign('assessed_user_id')
-                ->references('id')
-                ->on('users')
-                ->onDelete('cascade')
-                ->onUpdate('cascade');
         });
 
         Schema::create('user_ratings_history', function (Blueprint $table) {
@@ -41,18 +29,6 @@ return new class extends Migration
             $table->unsignedBigInteger('assessed_user_id');
             $table->integer('value');
             $table->timestamps();
-
-            $table->foreign('evaluating_user_id')
-                ->references('id')
-                ->on('users')
-                ->onDelete('cascade')
-                ->onUpdate('cascade');
-
-            $table->foreign('assessed_user_id')
-                ->references('id')
-                ->on('users')
-                ->onDelete('cascade')
-                ->onUpdate('cascade');
         });
     }
 
