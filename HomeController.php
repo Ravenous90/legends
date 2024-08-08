@@ -106,15 +106,9 @@ class HomeController extends Controller
         try {
             if (!is_null($image)) {
                 $path = "public/legends/" . Auth::id();
-                $files = Storage::allFiles($path);
-                Storage::delete($files);
+                Storage::deleteDirectory($path);
 
-                $time = time();
-                $extension = $image->extension();
-                $name = $time . '.' . $extension;
-                $fullPath = $path . '/' . $name;
-
-                Storage::put($fullPath, $image->getContent());
+                $image->store($path);
             }
         } catch (\Exception) {
             return redirect()->back();

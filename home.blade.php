@@ -55,7 +55,7 @@
                                     <td class="legend-td">
                                         Це я
                                     </td>
-                                @elseif (isset($myValues[$legend->id]) && $myValues[$legend->id]['is_disabled'] === 1)
+                            @elseif (isset($myValues[$legend->id]) && $myValues[$legend->id]['is_disabled'] === 1))
                                     <td class="legend-td">
                                         @if (isset($myValues[$legend->id]['next_update']))
                                             {{ $myValues[$legend->id]['value'] ?? 0 }}<br>
